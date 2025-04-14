@@ -48,7 +48,7 @@ class SearchAndReplaceJob
         $this->createdAt = new \DateTimeImmutable();
     }
 
-    public function addSearchResult(string $table, string $column, string $primaryKey, string $id, string $content, string $replace): self
+    public function addSearchResult(string $table, string $column, string $primaryKey, string $id, string $context, string $preview): self
     {
         if (!\is_array($this->results)) {
             $this->results = [];
@@ -59,8 +59,8 @@ class SearchAndReplaceJob
             'column' => $column,
             'pk' => $primaryKey,
             'id' => $id,
-            'content' => $content,
-            'replace' => $replace,
+            'context' => $context,
+            'preview' => $preview,
         ];
 
         return $this;

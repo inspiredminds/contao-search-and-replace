@@ -8,6 +8,8 @@ declare(strict_types=1);
 
 namespace InspiredMinds\ContaoSearchAndReplace\MessageHandler;
 
+use Contao\CoreBundle\Framework\ContaoFramework;
+use Contao\StringUtil;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Types\BlobType;
 use Doctrine\DBAL\Types\JsonType;
@@ -25,6 +27,10 @@ class SearchMessageHandler
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly Connection $db,
+        private readonly ContaoFramework $contaoFramework,
+        private readonly int $batchSize = 100,
+        private readonly int $contextLength = 48,
+        private readonly int $totalLength = 360,
     ) {
     }
 
@@ -40,6 +46,7 @@ class SearchMessageHandler
         }
 
         $schemaManager = $this->db->createSchemaManager();
+        $this->contaoFramework->initialize();
 
         // Go through all tables of the database
         foreach ($schemaManager->listTables() as $table) {
@@ -76,28 +83,38 @@ class SearchMessageHandler
                 continue;
             }
 
-            $result = $this->db->createQueryBuilder()
-                ->select(array_merge([$pk], $searchColumns))
+            $searchColumns = array_diff($searchColumns, [$pk]);
+
+            $offset = 0;
+
+            $qb = $this->db->createQueryBuilder()
+                ->select([$pk, ...$searchColumns])
                 ->from($table->getName())
-                ->executeQuery()
+                ->setMaxResults($this->batchSize)
             ;
 
-            foreach ($result->iterateAssociative() as $row) {
-                foreach ($searchColumns as $searchColumn) {
-                    $content = $row[$searchColumn];
+            while ($rows = $qb->fetchAllAssociative()) {
+                foreach ($rows as $row) {
+                    foreach ($searchColumns as $searchColumn) {
+                        $content = (string) $row[$searchColumn];
 
-                    if (preg_match($job->searchFor, (string) $content, $matches)) {
-                        $preview = preg_replace($job->searchFor, $job->replaceWith, (string) $content);
+                        if (preg_match($job->searchFor, $content, $matches)) {
+                            $context = $this->getContext($content, $matches);
+                            $preview = preg_replace($job->searchFor, $job->replaceWith, $context);
 
-                        $job->addSearchResult($table->getName(), $searchColumn, $pk, (string) $row[$pk], $content, $preview);
+                            $job->addSearchResult($table->getName(), $searchColumn, $pk, (string) $row[$pk], $context, $preview);
 
-                        $this->entityManager->persist($job);
-                        $this->entityManager->flush();
+                            $this->entityManager->persist($job);
+                            $this->entityManager->flush();
+                        }
                     }
                 }
+
+                $offset += $this->batchSize;
+                $qb->setFirstResult($offset);
             }
 
-            $result->free();
+            unset($rows, $row);
         }
 
         $job->searchFinished = true;
@@ -106,5 +123,25 @@ class SearchMessageHandler
         $this->entityManager->flush();
 
         $this->db->close();
+    }
+
+    private function getContext(string $content, array $matches): string
+    {
+        $contexts = [];
+        $chunks = [];
+
+        preg_match_all('((^|(?:\b|^).{0,'.$this->contextLength.'}(?:\PL|\p{Hiragana}|\p{Katakana}|\p{Han}|\p{Myanmar}|\p{Khmer}|\p{Lao}|\p{Thai}|\p{Tibetan}))(?:'.implode('|', array_map('preg_quote', $matches)).')((?:\PL|\p{Hiragana}|\p{Katakana}|\p{Han}|\p{Myanmar}|\p{Khmer}|\p{Lao}|\p{Thai}|\p{Tibetan}).{0,'.$this->contextLength.'}(?:\b|$)|$))ui', $content, $chunks);
+
+        foreach ($chunks[0] as $c) {
+            $contexts[] = ' '.$c.' ';
+        }
+
+        if (!$contexts) {
+            return '';
+        }
+
+        $context = trim(StringUtil::substrHtml(implode('…', $contexts), $this->totalLength));
+
+        return preg_replace('((?<=^|\PL|\p{Hiragana}|\p{Katakana}|\p{Han}|\p{Myanmar}|\p{Khmer}|\p{Lao}|\p{Thai}|\p{Tibetan})('.implode('|', array_map('preg_quote', $matches)).')(?=\PL|\p{Hiragana}|\p{Katakana}|\p{Han}|\p{Myanmar}|\p{Khmer}|\p{Lao}|\p{Thai}|\p{Tibetan}|$))ui', '<mark class="highlight">$1</mark>', StringUtil::specialchars($context));
     }
 }

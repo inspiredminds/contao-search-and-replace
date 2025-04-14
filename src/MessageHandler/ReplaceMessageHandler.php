@@ -52,14 +52,32 @@ class ReplaceMessageHandler
                 continue;
             }
 
+            $content = $this->db->createQueryBuilder()
+                ->select($this->db->quoteIdentifier($result['column']))
+                ->from($this->db->quoteIdentifier($result['table']))
+                ->where(\sprintf('%s = :id', $result['pk']))
+                ->setParameter('id', $result['id'])
+                ->fetchOne()
+            ;
+
+            if (!$content) {
+                continue;
+            }
+
+            $replace = preg_replace($job->searchFor, $job->replaceWith, (string) $content);
+
+            unset($content);
+
             try {
                 $this->db->update(
                     $result['table'],
-                    [$result['column'] => $result['replace']],
+                    [$result['column'] => $replace],
                     [$result['pk'] => $result['id']],
                 );
             } catch (Exception $e) {
-                $this->logger->error(\sprintf('Error during replacement of job "%s".', $job->id), ['exception' => $e]);
+                $this->logger?->error(\sprintf('Error during search & replace job "%s"', $job->id), ['exception' => $e]);
+            } finally {
+                unset($replace);
             }
         }
 

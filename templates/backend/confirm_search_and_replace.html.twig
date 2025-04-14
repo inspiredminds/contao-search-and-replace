@@ -30,12 +30,12 @@
                         </tr>
                     {% else %}
                         {% for uid, result in job.results|default([]) %}
-                            <tr class="{% if loop.index is odd %}even{% else %}odd{% endif %} toggle_select hover-row">
+                            <tr class="{% if loop.index is odd %}even{% else %}odd{% endif %} click2edit toggle_select hover-row">
                                 <td class="tl_file_list">{{ result.table }}</td>
                                 <td class="tl_file_list">{{ result.column }}</td>
                                 <td class="tl_file_list">{{ result.id }}</td>
-                                <td class="tl_file_list">{{ result.content }}</td>
-                                <td class="tl_file_list">{{ result.replace }}</td>
+                                <td class="tl_file_list">{{ result.context|raw }}</td>
+                                <td class="tl_file_list">{{ result.preview|raw }}</td>
                                 <td class="tl_file_list tl_right_nowrap"><input type="checkbox" name="uids[]" class="tl_tree_checkbox" value="{{ uid }}"></td>
                             </tr>
                         {% endfor %}
@@ -54,7 +54,7 @@
     </form>
     {% if not job.searchFinished %}
         <script>
-            const interval = setInterval(() => {
+            (function update() {
                 fetch(window.location)
                     .then(response => {
                         return response.text();
@@ -62,15 +62,22 @@
                     .then(html => {
                         const parsed = (new DOMParser()).parseFromString(html, 'text/html');
                         const element = parsed.getElementById('search_and_replace_results');
-                        document.getElementById('search_and_replace_results').replaceWith(element);
 
-                        if ('true' === String(element.dataset.finished).toLowerCase()) {
-                            clearInterval(interval);
-                            document.getElementById('search_and_replace_confirm').removeAttribute('disabled');
-                            document.getElementById('search_and_replace_spinner').remove();
+                        if (element) {
+                            document.getElementById('search_and_replace_results').replaceWith(element);
+
+                            if ('true' !== String(element.dataset.finished).toLowerCase()) {
+                                setTimeout(update, 2000);
+
+                                return;
+                            }
                         }
+
+                        document.getElementById('search_and_replace_confirm').removeAttribute('disabled');
+                        document.getElementById('search_and_replace_spinner').remove();
                     })
-            }, 1250);
+                ;
+            })();
         </script>
     {% endif %}
 {% endblock %}
