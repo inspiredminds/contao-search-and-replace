@@ -1,0 +1,51 @@
+{
+    "name": "inspiredminds/contao-search-and-replace",
+    "description": "Search and replace strings in the database.",
+    "type": "contao-bundle",
+    "license": "LGPL-3.0-or-later",
+    "homepage": "https://github.com/inspiredminds/contao-search-and-replace",
+    "authors": [
+        {
+            "name": "INSPIRED MINDS",
+            "homepage": "https://www.inspiredminds.at"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/inspiredminds/contao-search-and-replace/issues",
+        "source": "https://github.com/inspiredminds/contao-search-and-replace"
+    },
+    "funding": [
+        {
+            "type": "github",
+            "url": "https://github.com/sponsors/fritzmg"
+        }
+    ],
+    "require": {
+        "php": ">=8.1",
+        "contao/core-bundle": "^4.13 || ^5.0",
+        "symfony/dependency-injection": "^5.4 || ^6.4 || ^7.1",
+        "symfony/event-dispatcher": "^5.4 || ^6.4 || ^7.1",
+        "symfony/http-foundation": "^5.4 || ^6.4 || ^7.1",
+        "symfony/http-kernel": "^5.4 || ^6.4 || ^7.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "InspiredMinds\\ContaoSearchAndReplace\\": "src/"
+        }
+    },
+    "extra": {
+        "contao-manager-plugin": "InspiredMinds\\ContaoSearchAndReplace\\ContaoManager\\Plugin"
+    },
+    "require-dev": {
+        "contao/easy-coding-standard": "^6.0",
+        "contao/rector": "^1.0"
+    },
+    "config": {
+        "allow-plugins": {
+            "contao-components/installer": true,
+            "php-http/discovery": false,
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "contao-community-alliance/composer-plugin": true
+        }
+    }
+}

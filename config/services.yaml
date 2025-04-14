@@ -1,0 +1,16 @@
+parameters:
+    contao_search_and_replace.ignored_tables: ['search_and_replace_job', 'tl_cron_job', 'tl_log', 'tl_undo', 'tl_version', 'tl_opt_in', 'tl_opt_in_related']
+    contao_search_and_replace.default_tables: ['tl_content']
+
+services:
+    _defaults:
+        autoconfigure: true
+        autowire: true
+        bind:
+            $backupManager: '@contao.doctrine.backup_manager'
+            $ignoredTables: '%contao_search_and_replace.ignored_tables%'
+            $defaultTables: '%contao_search_and_replace.default_tables%'
+
+    InspiredMinds\ContaoSearchAndReplace\:
+        resource: ../src
+        exclude: ../src/{ContaoManager,DependencyInjection,Entity,ContaoSearchAndReplaceBundle.php}

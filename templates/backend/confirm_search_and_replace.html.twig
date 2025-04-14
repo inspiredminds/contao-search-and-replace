@@ -1,0 +1,76 @@
+{% extends "@Contao/be_main" %}
+{% trans_default_domain 'search_and_replace' %}
+
+{% set title = 'MOD.search_and_replace.0'|trans({}, 'contao_modules') %}
+{% set headline = 'MOD.search_and_replace.0'|trans({}, 'contao_modules') %}
+
+{% block main_content %}
+    <div id="tl_buttons">
+        <a href="{{ path(back_route) }}" class="header_back" title="" accesskey="b" onclick="Backend.getScrollOffset()">{{ 'MSC.goBack'|trans({}, 'contao_default') }}</a> 
+    </div>
+    <form method="post">
+        <input type="hidden" name="REQUEST_TOKEN" value="{{ request_token }}">
+        <div class="tl_listing_container list_view">
+            <div class="tl_select_trigger">
+                <label for="tl_select_trigger" class="tl_select_label">{{ 'MSC.selectAll'|trans({}, 'contao_default') }}</label> <input type="checkbox" id="tl_select_trigger" onclick="Backend.toggleCheckboxes(this)" class="tl_tree_checkbox">
+            </div>
+            <table class="tl_listing showColumns" id="search_and_replace_results" data-finished="{{ job.searchFinished ? 'true' : 'false' }}">
+                <tbody>
+                    <tr>
+                        <th class="tl_folder_tlist col_table">{{ 'results.table'|trans }}</th>
+                        <th class="tl_folder_tlist col_column">{{ 'results.column'|trans }}</th>
+                        <th class="tl_folder_tlist col_id">ID</th>
+                        <th class="tl_folder_tlist col_content">{{ 'results.content'|trans }}</th>
+                        <th class="tl_folder_tlist col_preview">{{ 'results.preview'|trans }}</th>
+                        <th class="tl_folder_tlist col_checkbox"></th>
+                    </tr>
+                    {% if job.searchFinished and not job.results|default %}
+                        <tr>
+                            <td class="tl_file_list" colspan="6">{{ 'results.empty'|trans({}, 'search_and_replace') }}</td>
+                        </tr>
+                    {% else %}
+                        {% for uid, result in job.results|default([]) %}
+                            <tr class="{% if loop.index is odd %}even{% else %}odd{% endif %} toggle_select hover-row">
+                                <td class="tl_file_list">{{ result.table }}</td>
+                                <td class="tl_file_list">{{ result.column }}</td>
+                                <td class="tl_file_list">{{ result.id }}</td>
+                                <td class="tl_file_list">{{ result.content }}</td>
+                                <td class="tl_file_list">{{ result.replace }}</td>
+                                <td class="tl_file_list tl_right_nowrap"><input type="checkbox" name="uids[]" class="tl_tree_checkbox" value="{{ uid }}"></td>
+                            </tr>
+                        {% endfor %}
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+        <div class="tl_formbody_submit" style="text-align:right">
+            <div class="tl_submit_container">
+                {%- if not job.searchFinished -%}
+                    <svg id="search_and_replace_spinner" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                {%- endif -%}
+                <button id="search_and_replace_confirm" type="submit" name="replace" class="tl_submit"{% if not job.searchFinished %} disabled{% endif %}>{{ 'results.submit'|trans }}</button>
+            </div>
+        </div>
+    </form>
+    {% if not job.searchFinished %}
+        <script>
+            const interval = setInterval(() => {
+                fetch(window.location)
+                    .then(response => {
+                        return response.text();
+                    })
+                    .then(html => {
+                        const parsed = (new DOMParser()).parseFromString(html, 'text/html');
+                        const element = parsed.getElementById('search_and_replace_results');
+                        document.getElementById('search_and_replace_results').replaceWith(element);
+
+                        if ('true' === String(element.dataset.finished).toLowerCase()) {
+                            clearInterval(interval);
+                            document.getElementById('search_and_replace_confirm').removeAttribute('disabled');
+                            document.getElementById('search_and_replace_spinner').remove();
+                        }
+                    })
+            }, 1250);
+        </script>
+    {% endif %}
+{% endblock %}
