@@ -4,13 +4,14 @@
 Contao Search & Replace
 =======================
 
-Allows you to search
+Allows you to search the database for a specific string and replace the occurences with another. You can also specify
+individual records to be replaced.
 
 ## Asynchronous Operation
 
-This extension support asynchronous operation via Symfony Messenger. This is important for lage databases.
+This extension supports asynchronous operation via Symfony Messenger - which will be important for large databases.
 
-In Contao **5** you will only need to route the messages manually:
+In Contao **5.3** and up you will only need to route the messages manually:
 
 ```yaml
 # config/config.yaml
@@ -33,7 +34,7 @@ framework:
             'InspiredMinds\ContaoSearchAndReplace\Message\ReplaceMessage': search_and_replace
 ```
 
-If you use a `doctrine://` transport you will also have to install `symfony/doctrine-messenger`:
+If you use such a `doctrine://` messenger transport you will also have to install `symfony/doctrine-messenger`:
 
 ```
 composer require symfony/doctrine-messenger
