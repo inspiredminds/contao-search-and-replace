@@ -84,23 +84,29 @@ class SearchMessageHandler
             }
 
             $searchColumns = array_diff($searchColumns, [$pk]);
-
-            $offset = 0;
+            $selectColumns = array_map(fn (string $column): string => $this->db->quoteIdentifier($column), [$pk, ...$searchColumns]);
 
             $qb = $this->db->createQueryBuilder()
-                ->select([$pk, ...$searchColumns])
-                ->from($table->getName())
+                ->select($selectColumns)
+                ->from($this->db->quoteIdentifier($table->getName()))
                 ->setMaxResults($this->batchSize)
             ;
+
+            $offset = 0;
 
             while ($rows = $qb->fetchAllAssociative()) {
                 foreach ($rows as $row) {
                     foreach ($searchColumns as $searchColumn) {
                         $content = (string) $row[$searchColumn];
 
-                        if (preg_match($job->searchFor, $content, $matches)) {
-                            $context = $this->getContext($content, $matches);
-                            $preview = preg_replace($job->searchFor, $job->replaceWith, $context);
+                        // Ignore binary data
+                        if (!mb_check_encoding($content, 'UTF-8')) {
+                            continue;
+                        }
+
+                        if (preg_match($job->getRegex(), $content, $matches)) {
+                            $context = $this->getContext($content, $matches, $job->caseInsensitive);
+                            $preview = preg_replace($job->getRegex(), $job->replaceWith, $context);
 
                             $job->addSearchResult($table->getName(), $searchColumn, $pk, (string) $row[$pk], $context, $preview);
 
@@ -125,12 +131,12 @@ class SearchMessageHandler
         $this->db->close();
     }
 
-    private function getContext(string $content, array $matches): string
+    private function getContext(string $content, array $matches, bool $ci = false): string
     {
         $contexts = [];
         $chunks = [];
 
-        preg_match_all('((^|(?:\b|^).{0,'.$this->contextLength.'}(?:\PL|\p{Hiragana}|\p{Katakana}|\p{Han}|\p{Myanmar}|\p{Khmer}|\p{Lao}|\p{Thai}|\p{Tibetan}))(?:'.implode('|', array_map('preg_quote', $matches)).')((?:\PL|\p{Hiragana}|\p{Katakana}|\p{Han}|\p{Myanmar}|\p{Khmer}|\p{Lao}|\p{Thai}|\p{Tibetan}).{0,'.$this->contextLength.'}(?:\b|$)|$))ui', $content, $chunks);
+        preg_match_all('((^|(?:\b|^).{0,'.$this->contextLength.'}(?:\PL|\pL))(?:'.implode('|', array_map('preg_quote', $matches)).')((?:\PL|\pL).{0,'.$this->contextLength.'}(?:\b|$)|$))u'.($ci ? 'i' : ''), $content, $chunks);
 
         foreach ($chunks[0] as $c) {
             $contexts[] = ' '.$c.' ';
@@ -142,6 +148,6 @@ class SearchMessageHandler
 
         $context = trim(StringUtil::substrHtml(implode('…', $contexts), $this->totalLength));
 
-        return preg_replace('((?<=^|\PL|\p{Hiragana}|\p{Katakana}|\p{Han}|\p{Myanmar}|\p{Khmer}|\p{Lao}|\p{Thai}|\p{Tibetan})('.implode('|', array_map('preg_quote', $matches)).')(?=\PL|\p{Hiragana}|\p{Katakana}|\p{Han}|\p{Myanmar}|\p{Khmer}|\p{Lao}|\p{Thai}|\p{Tibetan}|$))ui', '<mark class="highlight">$1</mark>', StringUtil::specialchars($context));
+        return preg_replace('((?<=^|\PL|\pL)('.implode('|', array_map('preg_quote', $matches)).')(?=\PL|\pL|$))u'.($ci ? 'i' : ''), '<mark class="highlight">$1</mark>', StringUtil::specialchars($context));
     }
 }

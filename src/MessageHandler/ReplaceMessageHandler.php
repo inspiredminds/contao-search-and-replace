@@ -40,15 +40,17 @@ class ReplaceMessageHandler
             throw new RecoverableMessageHandlingException('Search for this message is not finished.');
         }
 
-        if ($job->replaceFinished || !$job->results || !$job->replaceUids) {
+        if ($job->replaceFinished || !$job->getResults() || !$job->replaceUids) {
             return;
         }
 
         // Create backup before replacing
         $this->backupManager->create($this->backupManager->createCreateConfig());
 
+        $results = $job->getResults();
+
         foreach ($job->replaceUids as $uid) {
-            if (!$result = ($job->results[$uid] ?? null)) {
+            if (!$result = ($results[$uid] ?? null)) {
                 continue;
             }
 
@@ -64,7 +66,7 @@ class ReplaceMessageHandler
                 continue;
             }
 
-            $replace = preg_replace($job->searchFor, $job->replaceWith, (string) $content);
+            $replace = preg_replace($job->getRegex(), $job->replaceWith, (string) $content);
 
             unset($content);
 

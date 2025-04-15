@@ -1,7 +1,7 @@
 form:
     search_submit: Search
     search_for: Search for
-    search_for_description: The string to be searched for to replace it.
+    search_for_description: The string to be searched for to replace it (supports regular expressions).
     replace_with: Replace with
     replace_with_description: The string to replace the searched term with.
     tables: Select tables

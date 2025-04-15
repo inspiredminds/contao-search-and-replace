@@ -1,0 +1,17 @@
+form:
+    search_submit: Suchen
+    search_for: Suche nach
+    search_for_description: Die Zeichenfolge, nach der gesucht und danach ersetzt werden soll (Regular Expressions unterstützt).
+    replace_with: Ersetzen mit
+    replace_with_description: Die Zeichenfolge, mit der das Suchergebnis ersetzt werden soll.
+    tables: Tabellen auswählen
+    tables_description: Die Zeichenfolge wird in diesen Tabellen gesucht.
+    case_insensitive: Groß- und Kleinschreibung ignorieren
+    case_insensitive_description: Bei der Suche wird die Groß- und Kleinschreibung ignoriert.
+results:
+    empty: Keine Ergebnisse gefunden.
+    submit: Ersetzen
+    table: Tabelle
+    column: Spalte
+    content: Inhalt
+    preview: Vorschau

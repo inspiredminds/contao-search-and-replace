@@ -47,22 +47,12 @@ class SearchAndReplaceController extends AbstractBackendController
         $form = $this->buildForm($request);
 
         if ($form->validate()) {
-            $searchFor = (string) $form->fetch('search');
-
-            // Create regex for search
-            if (false === @preg_match($searchFor, '')) {
-                $searchFor = \sprintf('~%s~', preg_quote($searchFor, '~'));
-
-                if ($form->fetch('case_insensitive')) {
-                    $searchFor .= 'i';
-                }
-            }
-
             // Create the search & replace job
             $job = new SearchAndReplaceJob(
-                $searchFor,
+                $form->fetch('search'),
                 $form->fetch('replace'),
                 $form->fetch('tables'),
+                (bool) $form->fetch('case_insensitive'),
             );
 
             $this->entityManager->persist($job);

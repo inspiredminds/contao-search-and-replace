@@ -1,6 +1,22 @@
 parameters:
-    contao_search_and_replace.ignored_tables: ['search_and_replace_job', 'tl_cron_job', 'tl_log', 'tl_undo', 'tl_version', 'tl_opt_in', 'tl_opt_in_related']
-    contao_search_and_replace.default_tables: ['tl_content']
+    contao_search_and_replace.ignored_tables:
+        - altcha_challenges
+        - messenger_messages
+        - rememberme_token
+        - search_and_replace_job
+        - tl_crawl_queue
+        - tl_cron_job
+        - tl_log
+        - tl_message_queue
+        - tl_opt_in
+        - tl_opt_in_related
+        - tl_remember_me
+        - tl_trusted_device
+        - tl_undo
+        - tl_version
+        - webauthn_credentials
+    contao_search_and_replace.default_tables:
+        - 'tl_content'
 
 services:
     _defaults:

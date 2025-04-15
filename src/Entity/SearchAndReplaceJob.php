@@ -25,9 +25,6 @@ class SearchAndReplaceJob
     public readonly \DateTimeImmutable $createdAt;
 
     #[Column(type: Types::JSON, nullable: true)]
-    public array|null $results = null;
-
-    #[Column(type: Types::JSON, nullable: true)]
     public array|null $replaceUids = null;
 
     #[Column]
@@ -36,6 +33,9 @@ class SearchAndReplaceJob
     #[Column]
     public bool $replaceFinished = false;
 
+    #[Column(type: Types::JSON, nullable: true)]
+    private array|null $results = null;
+
     public function __construct(
         #[Column]
         public string $searchFor,
@@ -43,6 +43,8 @@ class SearchAndReplaceJob
         public string $replaceWith,
         #[Column(type: Types::JSON)]
         public array $tables,
+        #[Column]
+        public bool $caseInsensitive = false,
     ) {
         $this->id = Ulid::generate();
         $this->createdAt = new \DateTimeImmutable();
@@ -64,5 +66,15 @@ class SearchAndReplaceJob
         ];
 
         return $this;
+    }
+
+    public function getRegex(): string
+    {
+        return \sprintf('~%s~', str_replace('~', '\\~', $this->searchFor)).($this->caseInsensitive ? 'i' : '');
+    }
+
+    public function getResults(): array|null
+    {
+        return $this->results;
     }
 }
