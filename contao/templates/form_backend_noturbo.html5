@@ -1,0 +1,45 @@
+<?php
+
+use Contao\CoreBundle\ContaoCoreBundle;
+
+$isc5 = !version_compare(ContaoCoreBundle::getVersion(), '5', '<');
+
+?>
+
+<div class="<?= $this->class ?> block"<?= $this->cssID ?><?php if ($this->style): ?> style="<?= $this->style ?>"<?php endif; ?>>
+
+  <?php if ($this->headline): ?>
+    <<?= $this->hl ?>><?= $this->headline ?></<?= $this->hl ?>>
+  <?php endif; ?>
+
+  <form<?php if ($this->action): ?> action="<?= $this->action ?>"<?php endif; ?> method="<?= $this->method ?>" enctype="<?= $this->enctype ?>" class="tl_form tl_edit_form"<?= $this->novalidate ?> data-turbo="false">
+    <?php if ($this->method != 'get'): ?>
+      <input type="hidden" name="FORM_SUBMIT" value="<?= $this->formSubmit ?>">
+      <input type="hidden" name="REQUEST_TOKEN" value="<?= $this->requestToken ?>">
+      <?php if ($this->maxFileSize): ?>
+        <input type="hidden" name="MAX_FILE_SIZE" value="<?= $this->maxFileSize ?>">
+      <?php endif; ?>
+      <?= $this->hidden ?>
+    <?php endif; ?>
+    <?php if ($this->editFields): ?>
+      <div class="tl_formbody_edit">
+        <fieldset class="tl_box">
+          <?php if ($this->legend): ?>
+            <legend><?= $this->legend ?></legend>
+          <?php endif; ?>
+          <?php if ($isc5): ?>
+            <div class="widget-group">
+              <?= $this->editFields ?>
+            </div>
+          <?php endif; ?>
+        </fieldset>
+      </div>
+    <?php endif; ?>
+    <?php if ($this->submitFields): ?>
+      <div class="tl_formbody_submit" style="clear:both">
+        <?= $this->submitFields ?>
+      </div>
+    <?php endif; ?>
+  </form>
+
+</div>

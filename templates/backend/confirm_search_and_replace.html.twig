@@ -8,7 +8,7 @@
     <div id="tl_buttons">
         <a href="{{ path(back_route) }}" class="header_back" title="" accesskey="b" onclick="Backend.getScrollOffset()">{{ 'MSC.goBack'|trans({}, 'contao_default') }}</a> 
     </div>
-    <form method="post">
+    <form method="post" data-turbo="false">
         <input type="hidden" name="REQUEST_TOKEN" value="{{ request_token }}">
         <div class="tl_listing_container list_view">
             <div class="tl_select_trigger">
@@ -54,6 +54,11 @@
     </form>
     {% if not job.searchFinished %}
         <script>
+            if (window.Turbo) {
+                Turbo.cache.exemptPageFromCache();
+                Turbo.cache.exemptPageFromPreview();
+            }
+
             (function update() {
                 fetch(window.location)
                     .then(response => {

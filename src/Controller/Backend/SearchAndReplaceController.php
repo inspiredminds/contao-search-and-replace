@@ -66,7 +66,7 @@ class SearchAndReplaceController extends AbstractBackendController
         }
 
         return $this->render('@ContaoSearchAndReplace/backend/search_and_replace.html.twig', [
-            'form' => $form->generate(),
+            'form' => $form->generate('form_backend_noturbo'),
         ]);
     }
 
