@@ -7,6 +7,9 @@ Contao Search & Replace
 Allows you to search the database for a specific string and replace the occurences with another. You can also specify
 individual records to be replaced.
 
+Before the strings are replaced in the database, a backup (via Contao's database backup functionality) will be created
+automatically. Keep in mind that Contao only keeps one backup of the same day by default.
+
 ## Configuration
 
 ### Default Tables
@@ -54,6 +57,8 @@ parameters:
 
 This extension supports asynchronous operation via Symfony Messenger - which will be important for large databases.
 
+### Contao 5.3+
+
 In Contao **5.3** and up you will only need to route the messages manually:
 
 ```yaml
@@ -64,6 +69,10 @@ framework:
             'InspiredMinds\ContaoSearchAndReplace\Message\SearchMessage': contao_prio_normal
             'InspiredMinds\ContaoSearchAndReplace\Message\ReplaceMessage': contao_prio_normal
 ```
+
+You need to make sure though that a proper `contao:cron` cronjob is configured.
+
+### Contao 4.13
 
 In Contao **4.13** you will also have to create a messenger transport, e.g.:
 
