@@ -87,7 +87,7 @@ class SearchMessageHandler
             $selectColumns = array_map(fn (string $column): string => $this->db->quoteIdentifier($column), [$pk, ...$searchColumns]);
 
             $qb = $this->db->createQueryBuilder()
-                ->select($selectColumns)
+                ->select(...$selectColumns)
                 ->from($this->db->quoteIdentifier($table->getName()))
                 ->setMaxResults($this->batchSize)
             ;
