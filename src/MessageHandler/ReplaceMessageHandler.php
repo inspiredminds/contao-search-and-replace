@@ -66,7 +66,17 @@ class ReplaceMessageHandler
                 continue;
             }
 
-            $replace = preg_replace($job->getRegex(), $job->replaceWith, (string) $content);
+            if (in_array($result['column'], ['cssID', 'headline', 'sectionHeadline', 'teaserCssID'])) {
+                $contentArray = unserialize($content);
+
+                foreach ($contentArray as $key => $value) {
+                    $contentArray[$key] = preg_replace($job->getRegex(), $job->replaceWith, (string) $value);
+                }
+
+                $replace = serialize($contentArray);
+            } else {
+                $replace = preg_replace($job->getRegex(), $job->replaceWith, (string) $content);
+            }
 
             unset($content);
 
