@@ -105,3 +105,5 @@ e.g. via a `crontab` entry like this:
 ```
 * * * * * /usr/bin/php /var/www/example.com/vendor/bin/contao-console messenger:consume search_and_replace --time-limit=59 --quiet
 ```
+
+_Note:_ ideally you should protect this crontab entry via `flock` for example.
