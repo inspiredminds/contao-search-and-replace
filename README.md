@@ -10,7 +10,7 @@ individual records to be replaced.
 Before the strings are replaced in the database, a backup (via Contao's database backup functionality) will be created
 automatically. Keep in mind that Contao only keeps one backup of the same day by default.
 
-<img src="https://raw.githubusercontent.com/inspiredminds/contao-search-and-replace/main/screenshot.png" width="748" alt="Search & Replace Screenshot">
+<img src="https://raw.githubusercontent.com/inspiredminds/contao-search-and-replace/main/screenshot.png" width="561" alt="Search & Replace Screenshot">
 
 ## Configuration
 
