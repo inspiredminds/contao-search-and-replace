@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace InspiredMinds\ContaoSearchAndReplace\MessageHandler;
 
 use Contao\CoreBundle\Framework\ContaoFramework;
+use Contao\DC_Table;
 use Contao\StringUtil;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Types\BlobType;
@@ -20,6 +21,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use InspiredMinds\ContaoSearchAndReplace\Entity\SearchAndReplaceJob;
 use InspiredMinds\ContaoSearchAndReplace\Message\SearchMessage;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 #[AsMessageHandler]
 class SearchMessageHandler
@@ -27,7 +29,8 @@ class SearchMessageHandler
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly Connection $db,
-        private readonly ContaoFramework $contaoFramework,
+        private readonly ContaoFramework $framework,
+        private readonly UrlGeneratorInterface $urlGenerator,
         private readonly int $batchSize = 100,
         private readonly int $contextLength = 48,
         private readonly int $totalLength = 360,
@@ -46,7 +49,7 @@ class SearchMessageHandler
         }
 
         $schemaManager = $this->db->createSchemaManager();
-        $this->contaoFramework->initialize();
+        $this->framework->initialize();
 
         // Go through all tables of the database
         foreach ($schemaManager->listTables() as $table) {
@@ -84,7 +87,7 @@ class SearchMessageHandler
             }
 
             $searchColumns = array_diff($searchColumns, [$pk]);
-            $selectColumns = array_map(fn (string $column): string => $this->db->quoteIdentifier($column), [$pk, ...$searchColumns]);
+            $selectColumns = array_map($this->db->quoteIdentifier(...), [$pk, ...$searchColumns]);
 
             $qb = $this->db->createQueryBuilder()
                 ->select(...$selectColumns)
@@ -108,7 +111,7 @@ class SearchMessageHandler
                             $context = $this->getContext($content, $matches, $job->caseInsensitive);
                             $preview = preg_replace($job->getRegex(), $job->replaceWith, $context);
 
-                            $job->addSearchResult($table->getName(), $searchColumn, $pk, (string) $row[$pk], $context, $preview);
+                            $job->addSearchResult($table->getName(), $searchColumn, $pk, (string) $row[$pk], $context, $preview, $this->getEditUrl($table->getName(), (int) $row[$pk]));
 
                             $this->entityManager->persist($job);
                             $this->entityManager->flush();
@@ -136,7 +139,7 @@ class SearchMessageHandler
         $contexts = [];
         $chunks = [];
 
-        preg_match_all('((^|(?:\b|^).{0,'.$this->contextLength.'}(?:\PL|\pL))(?:'.implode('|', array_map('preg_quote', $matches)).')((?:\PL|\pL).{0,'.$this->contextLength.'}(?:\b|$)|$))u'.($ci ? 'i' : ''), $content, $chunks);
+        preg_match_all('((^|(?:\b|^).{0,'.$this->contextLength.'}(?:\PL|\pL))(?:'.implode('|', array_map(preg_quote(...), $matches)).')((?:\PL|\pL).{0,'.$this->contextLength.'}(?:\b|$)|$))u'.($ci ? 'i' : ''), $content, $chunks);
 
         foreach ($chunks[0] as $c) {
             $contexts[] = ' '.$c.' ';
@@ -148,6 +151,55 @@ class SearchMessageHandler
 
         $context = trim(StringUtil::substrHtml(implode('…', $contexts), $this->totalLength));
 
-        return preg_replace('((?<=^|\PL|\pL)('.implode('|', array_map('preg_quote', $matches)).')(?=\PL|\pL|$))u'.($ci ? 'i' : ''), '<mark class="highlight">$1</mark>', StringUtil::specialchars($context));
+        return preg_replace('((?<=^|\PL|\pL)('.implode('|', array_map(preg_quote(...), $matches)).')(?=\PL|\pL|$))u'.($ci ? 'i' : ''), '<mark class="highlight">$1</mark>', StringUtil::specialchars($context));
+    }
+
+    private function getEditUrl(string $table, int $id): string|null
+    {
+        if (!$do = $this->findModuleFromTableId($table, $id, null)) {
+            return null;
+        }
+
+        $query = [
+            'do' => $do,
+            'id' => $id,
+            'table' => $table,
+            'act' => 'edit',
+        ];
+
+        return $this->urlGenerator->generate('contao_backend', $query);
+    }
+
+    private function findModuleFromTableId(string $table, int $id, array|null $filteredModules): string|null
+    {
+        $modules = [];
+
+        foreach (null === $filteredModules ? $GLOBALS['BE_MOD'] : [$filteredModules] as $group) {
+            foreach ($group as $do => $module) {
+                if (\in_array($table, $module['tables'] ?? [], true)) {
+                    $modules[$do] = $module;
+                }
+            }
+        }
+
+        if (1 === \count($modules)) {
+            return array_keys($modules)[0];
+        }
+
+        $record = $this->getCurrentRecord($id, $table);
+
+        if (isset($record['ptable'], $record['pid'])) {
+            return $this->findModuleFromTableId($record['ptable'], (int) $record['pid'], $modules);
+        }
+
+        return array_keys($modules)[0] ?? null;
+    }
+
+    private function getCurrentRecord(int $id, string $table): array|null
+    {
+        return (new \ReflectionClass(DC_Table::class))
+            ->newInstanceWithoutConstructor()
+            ->getCurrentRecord($id, $table)
+        ;
     }
 }

@@ -38,6 +38,10 @@
     #search_and_replace_results th.col_preview {
         width: 36%;
     }
+
+    #search_and_replace_results th.col_edit {
+        width: 8%;
+    }
 }
 
 #search_and_replace_results td {

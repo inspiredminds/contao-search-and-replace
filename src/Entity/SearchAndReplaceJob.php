@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+/*
+ * (c) INSPIRED MINDS
+ */
+
 namespace InspiredMinds\ContaoSearchAndReplace\Entity;
 
 use Doctrine\DBAL\Types\Types;
@@ -50,7 +54,7 @@ class SearchAndReplaceJob
         $this->createdAt = new \DateTimeImmutable();
     }
 
-    public function addSearchResult(string $table, string $column, string $primaryKey, string $id, string $context, string $preview): self
+    public function addSearchResult(string $table, string $column, string $primaryKey, string $id, string $context, string $preview, string|null $edit = null): self
     {
         if (!\is_array($this->results)) {
             $this->results = [];
@@ -63,6 +67,7 @@ class SearchAndReplaceJob
             'id' => $id,
             'context' => $context,
             'preview' => $preview,
+            'edit' => $edit,
         ];
 
         return $this;

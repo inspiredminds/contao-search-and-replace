@@ -22,6 +22,7 @@
                         <th class="tl_folder_tlist col_id">ID</th>
                         <th class="tl_folder_tlist col_content">{{ 'results.content'|trans }}</th>
                         <th class="tl_folder_tlist col_preview">{{ 'results.preview'|trans }}</th>
+                        <th class="tl_folder_tlist col_edit">{{ 'MSC.editSelected'|trans({}, 'contao_default') }}</th>
                         <th class="tl_folder_tlist col_checkbox"></th>
                     </tr>
                     {% if job.searchFinished and not job.results|default %}
@@ -35,7 +36,8 @@
                                 <td class="tl_file_list">{{ result.column }}</td>
                                 <td class="tl_file_list">{{ result.id }}</td>
                                 <td class="tl_file_list">{{ result.context|raw }}</td>
-                                <td class="tl_file_list">{{ result.preview|raw }}</td>
+                                <td class="tl_file_list">{{ result.preview|default|raw }}</td>
+                                <td class="tl_file_list">{% if result.edit %}<a href="{{ result.edit}}">{{ backend_icon('edit.svg', 'MSC.editSelected'|trans({}, 'contao_default')) }}{% endif %}</td>
                                 <td class="tl_file_list tl_right_nowrap"><input type="checkbox" name="uids[]" class="tl_tree_checkbox" value="{{ uid }}"></td>
                             </tr>
                         {% endfor %}
