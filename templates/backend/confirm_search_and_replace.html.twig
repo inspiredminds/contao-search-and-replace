@@ -37,7 +37,7 @@
                                 <td class="tl_file_list">{{ result.id }}</td>
                                 <td class="tl_file_list">{{ result.context|raw }}</td>
                                 <td class="tl_file_list">{{ result.preview|default|raw }}</td>
-                                <td class="tl_file_list">{% if result.edit %}<a href="{{ result.edit}}">{{ backend_icon('edit.svg', 'MSC.editSelected'|trans({}, 'contao_default')) }}{% endif %}</td>
+                                <td class="tl_file_list">{% if result.edit|default %}<a href="{{ result.edit}}">{{ backend_icon('edit.svg', 'MSC.editSelected'|trans({}, 'contao_default')) }}{% endif %}</td>
                                 <td class="tl_file_list tl_right_nowrap"><input type="checkbox" name="uids[]" class="tl_tree_checkbox" value="{{ uid }}"></td>
                             </tr>
                         {% endfor %}

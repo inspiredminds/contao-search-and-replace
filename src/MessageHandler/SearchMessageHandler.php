@@ -9,7 +9,6 @@ declare(strict_types=1);
 namespace InspiredMinds\ContaoSearchAndReplace\MessageHandler;
 
 use Contao\CoreBundle\Framework\ContaoFramework;
-use Contao\DC_Table;
 use Contao\StringUtil;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Types\BlobType;
@@ -19,9 +18,10 @@ use Doctrine\DBAL\Types\StringType;
 use Doctrine\DBAL\Types\TextType;
 use Doctrine\ORM\EntityManagerInterface;
 use InspiredMinds\ContaoSearchAndReplace\Entity\SearchAndReplaceJob;
+use InspiredMinds\ContaoSearchAndReplace\Event\GetEditUrlEvent;
 use InspiredMinds\ContaoSearchAndReplace\Message\SearchMessage;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 #[AsMessageHandler]
 class SearchMessageHandler
@@ -30,7 +30,7 @@ class SearchMessageHandler
         private readonly EntityManagerInterface $entityManager,
         private readonly Connection $db,
         private readonly ContaoFramework $framework,
-        private readonly UrlGeneratorInterface $urlGenerator,
+        private readonly EventDispatcherInterface $eventDispatcher,
         private readonly int $batchSize = 100,
         private readonly int $contextLength = 48,
         private readonly int $totalLength = 360,
@@ -156,50 +156,10 @@ class SearchMessageHandler
 
     private function getEditUrl(string $table, int $id): string|null
     {
-        if (!$do = $this->findModuleFromTableId($table, $id, null)) {
-            return null;
-        }
+        $event = new GetEditUrlEvent($table, $id);
 
-        $query = [
-            'do' => $do,
-            'id' => $id,
-            'table' => $table,
-            'act' => 'edit',
-        ];
+        $this->eventDispatcher->dispatch($event);
 
-        return $this->urlGenerator->generate('contao_backend', $query);
-    }
-
-    private function findModuleFromTableId(string $table, int $id, array|null $filteredModules): string|null
-    {
-        $modules = [];
-
-        foreach (null === $filteredModules ? $GLOBALS['BE_MOD'] : [$filteredModules] as $group) {
-            foreach ($group as $do => $module) {
-                if (\in_array($table, $module['tables'] ?? [], true)) {
-                    $modules[$do] = $module;
-                }
-            }
-        }
-
-        if (1 === \count($modules)) {
-            return array_keys($modules)[0];
-        }
-
-        $record = $this->getCurrentRecord($id, $table);
-
-        if (isset($record['ptable'], $record['pid'])) {
-            return $this->findModuleFromTableId($record['ptable'], (int) $record['pid'], $modules);
-        }
-
-        return array_keys($modules)[0] ?? null;
-    }
-
-    private function getCurrentRecord(int $id, string $table): array|null
-    {
-        return (new \ReflectionClass(DC_Table::class))
-            ->newInstanceWithoutConstructor()
-            ->getCurrentRecord($id, $table)
-        ;
+        return $event->getEditUrl();
     }
 }
