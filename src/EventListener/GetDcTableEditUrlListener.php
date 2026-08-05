@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace InspiredMinds\ContaoSearchAndReplace\EventListener;
 
+use Contao\Controller;
 use Contao\DataContainer;
 use Contao\DC_Table;
 use InspiredMinds\ContaoSearchAndReplace\Event\GetEditUrlEvent;
@@ -19,6 +20,8 @@ class GetDcTableEditUrlListener
 
     public function __invoke(GetEditUrlEvent $event): void
     {
+        Controller::loadDataContainer($event->table);
+
         if (!$driver = DataContainer::getDriverForTable($event->table)) {
             return;
         }
