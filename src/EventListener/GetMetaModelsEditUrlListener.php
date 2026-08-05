@@ -44,6 +44,7 @@ class GetMetaModelsEditUrlListener
             $schemaManager = $this->db->createSchemaManager();
             $columns = $schemaManager->listTableColumns($table);
 
+            // We only support records with an "id" column for now
             if (3 !== \count(array_filter($columns, static fn (Column $column) => \in_array($column->getName(), ['id', 'att_id', 'item_id'], true)))) {
                 return;
             }
