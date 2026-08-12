@@ -106,7 +106,18 @@ class SearchMessageHandler
 
                         if (preg_match($job->getRegex(), $content, $matches)) {
                             $context = $this->getContext($content, $matches, $job->caseInsensitive);
-                            $preview = preg_replace($job->getRegex(), $job->replaceWith, $context);
+
+                            if (in_array($searchColumn, ['cssID', 'headline', 'sectionHeadline', 'teaserCssID'])) {
+                                $contentArray = unserialize($content);
+
+                                foreach ($contentArray as $key => $value) {
+                                    $contentArray[$key] = preg_replace($job->getRegex(), $job->replaceWith, $value);
+                                }
+
+                                $preview = serialize($contentArray);
+                            } else {
+                                $preview = preg_replace($job->getRegex(), $job->replaceWith, $context);
+                            }
 
                             $job->addSearchResult($table->getName(), $searchColumn, $pk, (string) $row[$pk], $context, $preview);
 
