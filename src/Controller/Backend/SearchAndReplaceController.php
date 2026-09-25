@@ -104,7 +104,7 @@ class SearchAndReplaceController extends AbstractBackendController
                 $this->translator->trans('form.replace_with_description', [], 'search_and_replace'),
             ],
             'inputType' => 'text',
-            'eval' => ['mandatory' => true, 'tl_class' => 'w50'],
+            'eval' => ['tl_class' => 'w50'],
         ]);
 
         $tables = $this->getTables();

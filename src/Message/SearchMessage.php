@@ -8,7 +8,9 @@ declare(strict_types=1);
 
 namespace InspiredMinds\ContaoSearchAndReplace\Message;
 
-class SearchMessage
+use Contao\CoreBundle\Messenger\Message\NormalPriorityMessageInterface;
+
+class SearchMessage implements NormalPriorityMessageInterface
 {
     public function __construct(public readonly string $jobId)
     {

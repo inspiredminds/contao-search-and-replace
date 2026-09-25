@@ -29,4 +29,4 @@ services:
 
     InspiredMinds\ContaoSearchAndReplace\:
         resource: ../src
-        exclude: ../src/{ContaoManager,DependencyInjection,Entity,ContaoSearchAndReplaceBundle.php}
+        exclude: ../src/{ContaoManager,DependencyInjection,Entity,Event,ContaoSearchAndReplaceBundle.php}

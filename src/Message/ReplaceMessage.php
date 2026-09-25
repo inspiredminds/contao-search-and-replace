@@ -8,7 +8,9 @@ declare(strict_types=1);
 
 namespace InspiredMinds\ContaoSearchAndReplace\Message;
 
-class ReplaceMessage
+use Contao\CoreBundle\Messenger\Message\NormalPriorityMessageInterface;
+
+class ReplaceMessage implements NormalPriorityMessageInterface
 {
     public function __construct(public readonly string $jobId)
     {
